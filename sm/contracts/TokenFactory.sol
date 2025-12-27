@@ -71,4 +71,23 @@ contract TokenFactory {
 
         emit TokenCreated(msg.sender, tokenAdd);
      }
+
+
+     function pauseToken(address token)external {
+        Tokeninfo storage info = allTokens[tokenIndex[token]];
+        require(msg.sender == info.creator ,"not creator");
+        require(info.status == TokenStatus.Active ,"not active");
+
+        info.status = TokenStatus.Paused;
+        emit TokenPaused(token);
+     }
+
+     function activateToken(address token)external {
+        Tokeninfo storage info = allTokens[tokenIndex[token]];
+        require(msg.sender == info.creator ,"not creator");
+        require(info.status == TokenStatus.Paused ,"Token is already active");
+
+        info.status = TokenStatus.Active;
+        emit TokenActivated(token);
+     }
 }
