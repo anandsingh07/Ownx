@@ -1,34 +1,74 @@
-// SPDX-License-Identifer:MIT 
+// SPDX-License-Identifer :MIT
 pragma solidity ^0.8.28;
 
 import "./CreatorToken.sol";
 
 contract TokenFactory {
 
-    enum TokenStatus{
+    enum TokenStatus {
 
         Active ,
-        Pending ,
+        Paused ,
         Deactivated 
 
     }
-
-    struct Tokeninfo {
+     struct Tokeninfo {
 
         address token ;
         address creator ;
         string name ;
         string symbol ;
-        string description ;
         string image ;
+        string description ;
         uint8 category ;
         TokenStatus status ;
         uint256 createdAt ;
 
-    }
+     }
 
-    Tokeninfo [] public alltokens ;
+     Tokeninfo[] public allTokens ;
 
-    mapping(address => address[])public creatorTokens ;
-    mapping(address => uint256)public tokenIndex ;
+     mapping(address => address[])public tokenCreator ;
+     mapping(address => uint256)public tokenIndex ;
+
+     event TokenCreated(address indexed creator , address indexed token);
+     event TokenActivated(address indexed token);
+     event TokenPaused(address indexed token);
+     event TokenDeactivated(address indexed token);
+
+     function tokenCreate(
+        string calldata name ,
+        string calldata description ,
+        uint256 supply ,
+        string calldata image ,
+        string calldata description ,
+        uint8 category
+     )external returns(address tokenAdd){
+        CreatorToken token = new CreatorToken(
+            name , 
+            symbol ,
+            supply ,
+            msg.sender
+        );
+        tokenAdd = address(token);
+
+        allTokens.push (
+            Tokeninfo({
+                token : tokenAdd ,
+                creator : msg.sender ,
+                name : name ,
+                symbol : symbol ,
+                image : image ,
+                description : description ,
+                category : category ,
+                status : TokenStatus.Active ,
+                createdAt : block.timestamp 
+            })
+        );
+
+        tokenIndex[tokenAdd] = allTokens.length -1 ;
+        CreatorToken[msg.sender].push(tokenAdd);
+
+        emit TokenCreated(msg.sender, tokenAdd);
+     }
 }
