@@ -25,16 +25,13 @@ contract TokenFactory {
     TokenInfo[] public allTokens;
 
     mapping(address => address[]) public creatorTokens;
-    mapping(address => uint256) public tokenIndex;
-    event TokenCreated(
-    address indexed creator,
-    address indexed token
-    );
+    mapping(address => uint256) private tokenIndex;
+    mapping(address => bool) public tokenExists;
 
+    event TokenCreated(address indexed creator, address indexed token);
     event TokenPaused(address indexed token);
     event TokenActivated(address indexed token);
     event TokenDeactivated(address indexed token);
-
 
     function createToken(
         string calldata name,
@@ -68,12 +65,15 @@ contract TokenFactory {
         );
 
         tokenIndex[tokenAddr] = allTokens.length - 1;
+        tokenExists[tokenAddr] = true;
         creatorTokens[msg.sender].push(tokenAddr);
 
         emit TokenCreated(msg.sender, tokenAddr);
     }
 
     function pauseToken(address token) external {
+        require(tokenExists[token], "token not found");
+
         TokenInfo storage info = allTokens[tokenIndex[token]];
         require(msg.sender == info.creator, "not creator");
         require(info.status == TokenStatus.Active, "not active");
@@ -83,6 +83,8 @@ contract TokenFactory {
     }
 
     function activateToken(address token) external {
+        require(tokenExists[token], "token not found");
+
         TokenInfo storage info = allTokens[tokenIndex[token]];
         require(msg.sender == info.creator, "not creator");
         require(info.status == TokenStatus.Paused, "not paused");
@@ -92,6 +94,8 @@ contract TokenFactory {
     }
 
     function deactivateToken(address token) external {
+        require(tokenExists[token], "token not found");
+
         TokenInfo storage info = allTokens[tokenIndex[token]];
         require(msg.sender == info.creator, "not creator");
         require(info.status != TokenStatus.Deactivated, "already");
@@ -117,6 +121,16 @@ contract TokenFactory {
         view
         returns (TokenStatus)
     {
+        require(tokenExists[token], "token not found");
         return allTokens[tokenIndex[token]].status;
+    }
+
+    function getTokenInfo(address token)
+        external
+        view
+        returns (TokenInfo memory)
+    {
+        require(tokenExists[token], "token not found");
+        return allTokens[tokenIndex[token]];
     }
 }

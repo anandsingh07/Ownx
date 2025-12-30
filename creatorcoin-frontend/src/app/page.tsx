@@ -25,8 +25,17 @@ export default function Home() {
           provider
         );
 
-        const data = await factory.getAllTokens();
-        setTokens(data);
+        // 1️⃣ get list
+        const all = await factory.getAllTokens();
+
+        // 2️⃣ refetch each token with SAFE getter
+        const fresh = await Promise.all(
+          all.map((t: any) =>
+            factory.getTokenInfo(t.token)
+          )
+        );
+
+        setTokens(fresh);
       } catch (err) {
         console.error("Error loading tokens:", err);
       } finally {
@@ -47,7 +56,6 @@ export default function Home() {
     <main style={{ padding: "20px" }}>
       <WalletButton />
 
-      {/* ✅ CREATE TOKEN CTA */}
       <div style={{ marginTop: "16px" }}>
         <Link
           href="/create"
